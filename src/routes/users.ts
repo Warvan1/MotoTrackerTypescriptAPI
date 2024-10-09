@@ -4,7 +4,21 @@ import { ExtendedRequest, requireUser } from "../middleware.js";
 
 const router: Router = express.Router();
 
+function isUser(obj: any){
+    return (
+        typeof obj.userid === "string" && 
+        typeof obj.email === "string" &&
+        typeof obj.email_verified === "boolean"
+    )
+}
+
 router.post('/adduser', async (req: Request, res: Response) => {
+    //input validation for post body
+    if(isUser(req.body)){
+        res.json(null)
+        return;
+    }
+
     //check to see if the user already exists
     let user = await db.query("select * from users where user_id = $1;", [req.body.userid]);
 

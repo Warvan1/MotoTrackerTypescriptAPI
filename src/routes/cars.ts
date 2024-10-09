@@ -4,7 +4,23 @@ import { ExtendedRequest, requireUser, carIDCheckView, carIDCheckOwner } from ".
 
 const router: Router = express.Router();
 
+function isCar(obj: any){
+    return (
+        typeof obj.name === "string" && obj.name !== "" && obj.name.length <= 15 &&
+        (typeof obj.year === "string" || typeof obj.year === "number") && obj.year >= 1900 && obj.year <= new Date().getFullYear() + 1 &&
+        typeof obj.make === "string" && obj.make !== "" && obj.make.length <= 10 &&
+        typeof obj.model === "string" && obj.model !== "" && obj.model.length <= 10 &&
+        (typeof obj.miles === "string" || typeof obj.miles === "number") && obj.miles >= 0
+    )
+}
+
 router.post('/addcar', requireUser, async (req: ExtendedRequest, res: Response) => {
+    //input validation for post body
+    if(!isCar(req.body)){
+        res.json(null);
+        return;
+    }
+
     //add the car to the cars table using the request body
     let car = await db.query("insert into cars(user_id, name, year, make, model, miles) values($1, $2, $3, $4, $5, $6) returning *;", 
         [req.headers.userid, req.body.name, req.body.year, req.body.make, req.body.model, req.body.miles]
@@ -37,6 +53,10 @@ router.get('/getcars', requireUser, async(req: ExtendedRequest, res: Response) =
 });
 
 router.get('/deletecar', requireUser, async(req: ExtendedRequest, res: Response) => {
+    if(req.query.car_id === undefined){
+        res.json(null);
+        return;
+    }
     //implicit owner requirement for delete in sql query
     await db.query("delete from cars where user_id = $1 and car_id = $2;", [req.headers.userid, req.query.car_id])
 
@@ -48,6 +68,10 @@ router.get('/deletecar', requireUser, async(req: ExtendedRequest, res: Response)
 });
 
 router.get('/getcurrentcar', requireUser, async(req: ExtendedRequest, res: Response) => {
+    if(req.user_db.current_car === 0){
+        res.json(null);
+        return;
+    }
     let access = await db.query("select * from access where car_id = $1 and user_id = $2;", [req.user_db.current_car, req.user_db.user_id]);
     if(access.rows.length === 0){
         res.json(null);

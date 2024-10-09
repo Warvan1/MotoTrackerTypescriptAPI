@@ -45,6 +45,10 @@ router.post('/addmaintenance', carIDCheckEdit, async (req: ExtendedRequest, res:
 
 router.get('/getmaintenancelog', requireUser, async (req: ExtendedRequest, res: Response) => {
     let log: any;
+    if(req.user_db.current_car === 0){
+        res.json(null);
+        return;
+    }
     if(req.query.filter !== undefined){
         log = await db.query("select * from maintenance where car_id = $1 and service_type = $2;", [req.user_db.current_car, req.query.filter]);
     }
@@ -91,6 +95,10 @@ router.get('/deletemaintenancelog', requireUser, async (req: ExtendedRequest, re
         res.json(null);
         return;
     }
+    if(req.user_db.current_car === 0){
+        res.json(null);
+        return;
+    }
 
     //check to make sure that we have edit permissions for the car
     let access = await db.query("select * from access where car_id = $1 and user_id = $2 and permissions = $3;", [req.user_db.current_car, req.user_db.user_id, "Edit"]);
@@ -101,7 +109,7 @@ router.get('/deletemaintenancelog', requireUser, async (req: ExtendedRequest, re
     }
 
     //delete the entry from the maintenance log
-    let deletedLog = await db.query("delete from maintenance where maintenance_id = $1 returning *;", [req.query.maintenance_id]);
+    let deletedLog = await db.query("delete from maintenance where maintenance_id = $1 and car_id = $2 returning *;", [req.query.maintenance_id, req.user_db.current_car]);
 
     //return if we failed to delete
     if(deletedLog.rows.length === 0){
