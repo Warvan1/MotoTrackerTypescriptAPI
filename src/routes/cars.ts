@@ -93,6 +93,20 @@ router.get('/setcurrentcar', carIDCheckView, async(req: ExtendedRequest, res: Re
 });
 
 router.post('/sharecar', carIDCheckOwner, async(req: ExtendedRequest, res: Response) => {
+    if(req.body.email === undefined || req.body.permissions === undefined){
+        res.json({
+            success: false
+        })
+        return;
+    }
+    
+    if(req.body.permissions !== "View" && req.body.permissions !== "Edit" && req.body.permissions !== "Remove Access"){
+        res.json({
+            success: false
+        })
+        return;
+    }
+
     let user = await db.query("select * from users where email = $1;", [req.body.email]);
     if(user.rows.length === 0){
         res.json({
