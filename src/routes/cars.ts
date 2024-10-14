@@ -1,6 +1,6 @@
 import express, { Router, Response } from "express";
 import { db } from "../utils.js";
-import { ExtendedRequest, requireUser, carIDCheckView, carIDCheckOwner } from "../middleware.js";
+import { ExtendedRequest, requireUser, carIDCheckView, carIDCheckOwner, carIDCheckEdit } from "../middleware.js";
 
 const router: Router = express.Router();
 
@@ -66,6 +66,38 @@ router.get('/deletecar', requireUser, async(req: ExtendedRequest, res: Response)
     }
     res.json(null);
 });
+
+router.post('/editcar', carIDCheckEdit, async(req: ExtendedRequest, res: Response) => {
+    //post body defaults from car body
+    if(typeof req.body.name !== "string"){
+        req.body.name = req.car_db.name;
+    }
+    if(typeof req.body.year !== "number"){
+        req.body.year = req.car_db.year;
+    }
+    if(typeof req.body.make !== "string"){
+        req.body.make = req.car_db.make;
+    }
+    if(typeof req.body.model !== "string"){
+        req.body.model = req.car_db.model;
+    }
+    if(typeof req.body.miles !== "number"){
+        req.body.miles = req.car_db.miles;
+    }
+
+    //input validation for post body (this is usefull for year limits and string length limits)
+    if(!isCar(req.body)){
+        res.json(null);
+        return;
+    }
+
+    let editedCar = await db.query("update cars set name = $2, year = $3, make = $4, model = $5, miles = $6 where car_id = $1 returning *;", 
+        [req.query.car_id, req.body.name, req.body.year, req.body.make, req.body.model, req.body.miles]
+    )
+
+    res.json(editedCar.rows[0]);
+    return;
+})
 
 router.get('/getcurrentcar', requireUser, async(req: ExtendedRequest, res: Response) => {
     if(req.user_db.current_car === 0){
