@@ -68,24 +68,7 @@ router.get('/deletecar', requireUser, async(req: ExtendedRequest, res: Response)
 });
 
 router.post('/editcar', carIDCheckEdit, async(req: ExtendedRequest, res: Response) => {
-    //post body defaults from car body
-    if(typeof req.body.name !== "string"){
-        req.body.name = req.car_db.name;
-    }
-    if(typeof req.body.year !== "number"){
-        req.body.year = req.car_db.year;
-    }
-    if(typeof req.body.make !== "string"){
-        req.body.make = req.car_db.make;
-    }
-    if(typeof req.body.model !== "string"){
-        req.body.model = req.car_db.model;
-    }
-    if(typeof req.body.miles !== "number"){
-        req.body.miles = req.car_db.miles;
-    }
-
-    //input validation for post body (this is usefull for year limits and string length limits)
+    //input validation for post body
     if(!isCar(req.body)){
         res.json(null);
         return;
