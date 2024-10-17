@@ -4,7 +4,22 @@ import { ExtendedRequest, requireUser, carIDCheckEdit } from "../middleware.js";
 
 const router: Router = express.Router();
 
+function isMaintenanceLog(obj: any){
+    return (
+        typeof obj.type === "string" &&
+        (typeof obj.cost === "number" || typeof obj.cost === "string") &&
+        (typeof obj.gallons === "number" || typeof obj.gallons === "string") &&
+        (typeof obj.miles === "number" || typeof obj.miles === "string") &&
+        typeof obj.notes === "string"
+    )
+}
+
 router.post('/addmaintenance', carIDCheckEdit, async (req: ExtendedRequest, res: Response) => {
+    //input validation for post body
+    if(!isMaintenanceLog(req.body)){
+        res.json(null);
+        return;
+    }
 
     //add an entry to the maintenance log table
     await db.query("insert into maintenance(user_id, car_id, service_type, miles, cost, gallons, notes) values($1, $2, $3, $4, $5, $6, $7);", 
