@@ -14,7 +14,7 @@ function isUser(obj: any){
 
 router.post('/adduser', async (req: Request, res: Response) => {
     //input validation for post body
-    if(isUser(req.body)){
+    if(!isUser(req.body)){
         res.json(null)
         return;
     }
